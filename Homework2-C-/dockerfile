@@ -1,0 +1,22 @@
+# Stage 1: Build โปรเจกต์
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# คัดลอกไฟล์ .csproj เพื่อ Restore dependencies
+COPY ["TurnBasedRPG.csproj", "./"]
+RUN dotnet restore "TurnBasedRPG.csproj"
+
+# คัดลอกซอร์สโค้ดทั้งหมดแล้วทำการ Publish
+COPY . .
+RUN dotnet publish "TurnBasedRPG.csproj" -c Release -o /app/publish
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# ตั้งค่า Port การทำงาน
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+ENTRYPOINT ["dotnet", "TurnBasedRPG.dll"]
